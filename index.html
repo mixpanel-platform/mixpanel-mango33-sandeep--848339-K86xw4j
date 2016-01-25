@@ -7,9 +7,49 @@
     <script src="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.js"></script>
   </head>
   <body class="mixpanel-platform-body">
-    <h1>Hello, World!</h1>
+    <div class="mixpanel-platform-section">
+        <div id="eventName" style="float: left;"></div>
+        <div style="clear: left"></div>
+        <div style="clear: both;"></div>
+        <div id="graph"></div>
+    </div>
     <script>
-      // Run queries and display results here
+      MP.api.ready(function() {
+        // replace with event name of your choice
+        var eventName = $('#eventName').MPEventSelect();
+
+        var runQuery = function() {
+          var $dau = MP.api.segment(eventName.val(), {
+            from: moment().subtract(30, 'days'),
+            to: moment().subtract(1, 'days'),
+            unit: 'day',
+            type: 'unique'
+          });
+
+
+          var $mau = MP.api.segment(eventName.val(), {
+            from: moment().subtract(30, 'days'),
+            to: moment().subtract(1, 'days'),
+            unit: 'month',
+            type: 'unique'
+          });
+
+          $.when($dau, $mau).done(function(dau, mau) {
+            // average the DAU values and divide them by the MAU ones
+            // (we sum the MAU in the case where the 30 days spans over two months)
+            debugger
+            var dauMau = dau.divide(mau.sum()).values();
+            console.log (dauMau)
+            $('<div></div>').appendTo('body').MPChart({ // create chart
+              chartType: 'line',
+              data: dauMau                              // set its data
+            });
+          });
+        };
+
+      eventName.on('change', runQuery);
+    });
     </script>
   </body>
 </html>
+
